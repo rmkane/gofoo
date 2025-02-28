@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -41,14 +42,14 @@ func CreateConfig(configName, configDir, format string, force bool) error {
 	configFile := fmt.Sprintf("%s%s", configName, ext)
 	configPath := filepath.Join(configHomeDir, configFile)
 
-	if _, err := os.Stat(configPath); err == nil {
+	if _, err = os.Stat(configPath); err == nil {
 		if !force {
 			return fmt.Errorf("config file already exists, use the --force flag to overwrite it")
 		}
 	}
 
-	if _, err := os.Stat(configHomeDir); os.IsNotExist(err) {
-		if err := os.Mkdir(configHomeDir, 0755); err != nil {
+	if _, err = os.Stat(configHomeDir); os.IsNotExist(err) {
+		if err = os.Mkdir(configHomeDir, 0755); err != nil {
 			return fmt.Errorf("cannot creating config directory: %v", err)
 		}
 	}
@@ -63,7 +64,12 @@ func CreateConfig(configName, configDir, format string, force bool) error {
 		return fmt.Errorf("cannot write to config file: %v", err)
 	}
 
-	defer f.Close()
+	defer func(f *os.File) {
+		err = f.Close()
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}(f)
 
 	fmt.Println("Successfully created config file:", configPath)
 

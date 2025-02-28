@@ -18,7 +18,10 @@ func SetupLogging(prefix string, verbose bool) (*os.File, error) {
 
 	// Ensure log directory exists
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
-		os.MkdirAll(logDir, 0755)
+		err = os.MkdirAll(logDir, 0755)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	now := time.Now().Format("2006-01-02")
@@ -35,7 +38,7 @@ func SetupLogging(prefix string, verbose bool) (*os.File, error) {
 	}
 
 	if verbose && ok {
-		fmt.Println("Logging to: ", logFileName)
+		fmt.Println("Logging to:", logFileName)
 	}
 
 	slog.SetDefault(logger)

@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -19,14 +20,21 @@ func AddEpilog(cmd *cobra.Command, epilog string) {
 func NewRootCmd(appName, configName, configDir, version string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               appName,
+		Version:           version,
+		Long:              "A CLI tool that supports configuration and logging",
+		Short:             "A CLI tool that supports configuration and logging",
 		PersistentPreRun:  preRunWithAppName(appName),
 		PersistentPostRun: postRun,
 	}
 
 	AddEpilog(cmd, fmt.Sprintf("Version: %s", version))
 
+	// Determine the location for the default config to be loaded
+	defaultPath := filepath.Join("$HOME", configDir, configName+".yml")
+	configUsage := fmt.Sprintf("config file (default: %s)", defaultPath)
+
 	var cfgFile string
-	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.gofoo/config.yml)")
+	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", configUsage)
 	_ = viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
 
 	var verbose bool
@@ -54,6 +62,9 @@ func preRunWithAppName(appName string) func(cmd *cobra.Command, args []string) {
 
 func postRun(cmd *cobra.Command, args []string) {
 	if logFileHandle != nil {
-		logFileHandle.Close()
+		err := logFileHandle.Close()
+		if err != nil {
+			panic(err)
+		}
 	}
 }

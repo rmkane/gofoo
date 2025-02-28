@@ -47,7 +47,11 @@ func InitConfig(configName, configDir string) error {
 	fmt.Println("No config file found, using default configuration")
 	setDefaultConfig()
 
-	fmt.Println("Using config file:", viper.ConfigFileUsed())
+	// If a config file was loaded, print it out.
+	configFileUsed := viper.ConfigFileUsed()
+	if configFileUsed != "" {
+		fmt.Println("Using config file:", configFileUsed)
+	}
 
 	return nil
 }

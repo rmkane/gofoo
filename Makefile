@@ -27,6 +27,8 @@ VERSION := 0.0.1
 # Testing targets
 .PHONY: test test-verbose test-with-coverage
 
+# Standard targets
+
 all: tidy format lint test # [Default] Formats, lints, and runs tests
 
 help: # Display this help message
@@ -40,7 +42,7 @@ build: # Build the binary
 	@echo -e "$(GREEN)Building binary...$(RESET)"
 	@$(GO) build -ldflags "-X main.Version=$(VERSION)" -o $(BIN_DIR)/$(BINARY) cmd/$(APP_NAME)/main.go
 
-run: # Run the binary
+run: build # Run the binary
 	@echo -e "$(GREEN)Running binary...$(RESET)"
 	@$(BIN_DIR)/$(BINARY)
 
