@@ -1,4 +1,4 @@
-module gofoo
+module github.com/rmkane/gofoo
 
 go 1.23.5
 

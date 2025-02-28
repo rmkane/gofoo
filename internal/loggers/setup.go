@@ -1,40 +1,20 @@
-package config
+package loggers
 
 import (
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"strings"
 	"time"
+
+	"github.com/rmkane/gofoo/internal/config"
+	"github.com/rmkane/gofoo/internal/utils"
 )
-
-const (
-	LevelNameDebug = "DEBUG"
-	LevelNameInfo  = "INFO"
-	LevelNameWarn  = "WARN"
-	LevelNameError = "ERROR"
-
-	FormatNameText = "text"
-	FormatNameJSON = "json"
-)
-
-var nameToLevel = map[string]slog.Level{
-	LevelNameDebug: slog.LevelDebug,
-	LevelNameInfo:  slog.LevelInfo,
-	LevelNameWarn:  slog.LevelWarn,
-	LevelNameError: slog.LevelError,
-}
-
-var supportedLoggingFormats = map[string]bool{
-	FormatNameText: true,
-	FormatNameJSON: true,
-}
 
 func SetupLogging(prefix string, verbose bool) (*os.File, error) {
-	logDir := GetLoggingDir()
-	logFormat := GetLoggingFormat()
-	logLevel := GetLoggingLevel()
+	logDir := config.GetLoggingDir()
+	logFormat := config.GetLoggingFormat()
+	logLevel := config.GetLoggingLevel()
 
 	// Ensure log directory exists
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
@@ -74,26 +54,11 @@ func getLoggerForFormat(format string, level slog.Level, logFile *os.File) (*slo
 	}
 
 	switch format {
-	case FormatNameJSON:
+	case utils.FormatNameJSON:
 		return slog.New(slog.NewJSONHandler(writer, &slog.HandlerOptions{Level: level})), ok
-	case FormatNameText:
+	case utils.FormatNameText:
 		return slog.New(slog.NewTextHandler(writer, &slog.HandlerOptions{Level: level})), ok
 	}
 
 	return nil, false
-}
-
-func GetLoggingLevelByName(name string) (slog.Level, bool) {
-	if level, ok := nameToLevel[strings.ToUpper(name)]; ok {
-		return level, true
-	}
-	return slog.LevelInfo, false
-}
-
-func GetLoggingFormatByName(logFormat string) (string, bool) {
-	format := strings.ToLower(logFormat)
-	if _, ok := supportedLoggingFormats[logFormat]; ok {
-		return format, true
-	}
-	return FormatNameText, false
 }

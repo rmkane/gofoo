@@ -8,7 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"gofoo/internal/config"
+	"github.com/rmkane/gofoo/internal/config"
+	"github.com/rmkane/gofoo/internal/loggers"
 )
 
 const (
@@ -61,7 +62,7 @@ func preRun(cmd *cobra.Command, args []string) {
 	verbose := viper.GetBool("verbose")
 
 	var err error
-	logFileHandle, err = config.SetupLogging(AppName, verbose)
+	logFileHandle, err = loggers.SetupLogging(AppName, verbose)
 	if err != nil {
 		fmt.Println("Error setting up logging:", err)
 		os.Exit(1)
