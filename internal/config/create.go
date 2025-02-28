@@ -9,11 +9,13 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v3"
+
+	"github.com/rmkane/gofoo/pkg/model"
 )
 
 var Formats = [...]string{"json", "yaml", "toml"}
 
-var encoderLookup = map[string]func(f *os.File, configData Config) error{
+var encoderLookup = map[string]func(f *os.File, configData model.Config) error{
 	"json": jsonEncoder,
 	"yaml": yamlEncoder,
 	"toml": tomlEncoder,
@@ -56,7 +58,7 @@ func CreateConfig(configName, configDir, format string, force bool) error {
 		return fmt.Errorf("cannot create config file: %v", err)
 	}
 
-	err = encodeConfig(f, DefaultConfig, format)
+	err = encodeConfig(f, model.DefaultConfig, format)
 	if err != nil {
 		return fmt.Errorf("cannot write to config file: %v", err)
 	}
@@ -68,7 +70,7 @@ func CreateConfig(configName, configDir, format string, force bool) error {
 	return nil
 }
 
-func encodeConfig(f *os.File, configData Config, format string) error {
+func encodeConfig(f *os.File, configData model.Config, format string) error {
 	encoder := encoderLookup[format]
 	if encoder == nil {
 		return fmt.Errorf("unsupported format: %s", format)
@@ -76,19 +78,19 @@ func encodeConfig(f *os.File, configData Config, format string) error {
 	return encoder(f, configData)
 }
 
-func jsonEncoder(f *os.File, configData Config) error {
+func jsonEncoder(f *os.File, configData model.Config) error {
 	enc := json.NewEncoder(f)
 	enc.SetIndent("", "  ")
 	return enc.Encode(configData)
 }
 
-func yamlEncoder(f *os.File, configData Config) error {
+func yamlEncoder(f *os.File, configData model.Config) error {
 	enc := yaml.NewEncoder(f)
 	enc.SetIndent(2)
 	return enc.Encode(configData)
 }
 
-func tomlEncoder(f *os.File, configData Config) error {
+func tomlEncoder(f *os.File, configData model.Config) error {
 	enc := toml.NewEncoder(f)
 	return enc.Encode(configData)
 }
