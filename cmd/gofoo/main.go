@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
+	"github.com/rmkane/gofoo/cmd/gofoo/commands"
 	"github.com/rmkane/gofoo/internal/config"
-	"github.com/rmkane/gofoo/internal/loggers"
 )
 
 const (
@@ -18,36 +16,17 @@ const (
 	ConfigName = "config"
 )
 
-var logFileHandle *os.File
+var Version = "dev"
 
 func main() {
+	// Set the version
+
 	// Initialize viper config first, so that configuration is available in the cobra commands
 	cobra.OnInitialize(initializeConfig)
 
 	// Create and execute the root command
-	rootCmd := NewRootCmd()
+	rootCmd := commands.NewRootCmd(AppName, ConfigName, ConfigDir, Version)
 	rootCmd.Execute()
-}
-
-func NewRootCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:               AppName,
-		PersistentPreRun:  preRun,
-		PersistentPostRun: postRun,
-	}
-
-	var cfgFile string
-	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.gofoo/config.yml)")
-	_ = viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config"))
-
-	var verbose bool
-	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	_ = viper.BindPFlag("verbose", cmd.PersistentFlags().Lookup("verbose"))
-
-	cmd.AddCommand(NewInitCmd())
-	cmd.AddCommand(NewShowCmd())
-
-	return cmd
 }
 
 func initializeConfig() {
@@ -56,67 +35,4 @@ func initializeConfig() {
 		fmt.Println("Error initializing config:", err)
 		os.Exit(1)
 	}
-}
-
-func preRun(cmd *cobra.Command, args []string) {
-	verbose := viper.GetBool("verbose")
-
-	var err error
-	logFileHandle, err = loggers.SetupLogging(AppName, verbose)
-	if err != nil {
-		fmt.Println("Error setting up logging:", err)
-		os.Exit(1)
-	}
-
-}
-
-func postRun(cmd *cobra.Command, args []string) {
-	if logFileHandle != nil {
-		logFileHandle.Close()
-	}
-}
-
-func NewInitCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Initialize the configuration file",
-		Run: func(cmd *cobra.Command, args []string) {
-			format, _ := cmd.Flags().GetString("format")
-			force, _ := cmd.Flags().GetBool("force")
-
-			err := config.CreateConfig(ConfigName, ConfigDir, format, force)
-			if err != nil {
-				fmt.Println("Error creating config:", err)
-				os.Exit(1)
-			}
-
-			// Print to log
-			slog.Debug("Log level DEBUG")
-			slog.Info("Log level INFO")
-			slog.Warn("Log level WARN")
-			slog.Error("Log level ERROR")
-		},
-	}
-
-	cmd.Flags().StringP("format", "f", "yaml", "config format: json, yaml, toml")
-	cmd.Flags().BoolP("force", "", false, "overwrite the configuration file if it exists")
-
-	return cmd
-}
-
-func NewShowCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "show",
-		Short: "Show the configuration",
-		Run: func(cmd *cobra.Command, args []string) {
-			config.ShowConfig()
-
-			// Print to log
-			slog.Debug("Log level DEBUG")
-			slog.Info("Log level INFO")
-			slog.Warn("Log level WARN")
-			slog.Error("Log level ERROR")
-		},
-	}
-	return cmd
 }

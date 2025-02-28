@@ -16,12 +16,16 @@ CYAN    := \033[96m
 APP_NAME := gofoo
 BIN_DIR := bin
 BINARY  := gofoo
+VERSION := 0.0.1
 
 # Main targets
-.PHONY: all help dev build install uninstall
+.PHONY: all help build run install uninstall
 
 # Development targets
-.PHONY: setup tidy update format lint test test-verbose test-with-coverage cleanup
+.PHONY: dev setup tidy update format lint cleanup
+
+# Testing targets
+.PHONY: test test-verbose test-with-coverage
 
 all: tidy format lint test # [Default] Formats, lints, and runs tests
 
@@ -30,13 +34,15 @@ help: # Display this help message
 	@printf "$(BOLD)Available targets:$(RESET)\n"
 	@awk 'BEGIN {FS = ":.*?#"} /^[a-zA-Z_-]+:.*?#/ {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-dev: # Build the binary in development mode
-	@echo -e "$(GREEN)Building binary in development mode...$(RESET)"
-	@$(GO) run cmd/$(APP_NAME)/main.go
+# Main targets
 
 build: # Build the binary
 	@echo -e "$(GREEN)Building binary...$(RESET)"
-	@$(GO) build -o $(BIN_DIR)/$(BINARY) cmd/$(APP_NAME)/main.go
+	@$(GO) build -ldflags "-X main.Version=$(VERSION)" -o $(BIN_DIR)/$(BINARY) cmd/$(APP_NAME)/main.go
+
+run: # Run the binary
+	@echo -e "$(GREEN)Running binary...$(RESET)"
+	@$(BIN_DIR)/$(BINARY)
 
 install: # Install the binary
 	@echo -e "$(GREEN)Installing binary...$(RESET)"
@@ -51,6 +57,12 @@ uninstall: # Uninstall the binary
 	[ -z "$$BIN_PATH" ] && BIN_PATH="$(shell $(GO) env GOPATH)/bin"; \
 	$(RM) -f "$$BIN_PATH/$(BINARY)"
 	@echo -e "$(GREEN)Binary uninstalled from $(BLUE)$$BIN_PATH/$(BINARY)$(RESET)"
+
+# Development
+
+dev: # Run the binary in development mode
+	@echo -e "$(GREEN)Building binary in development mode...$(RESET)"
+	@$(GO) run cmd/$(APP_NAME)/main.go
 
 setup: # Install dev tools
 	@echo -e "$(GREEN)Installing dev tools...$(RESET)"
@@ -80,6 +92,14 @@ lint: # Run the linter
 	@echo -e "$(GREEN)Linting code...$(RESET)"
 	@$(GO) vet ./...
 
+cleanup: # Remove dev dependencies
+	@echo -e "$(GREEN)Removing dev dependencies...$(RESET)"
+	@BIN_PATH="$(shell $(GO) env GOBIN)"; \
+	[ -z "$$BIN_PATH" ] && BIN_PATH="$(shell $(GO) env GOPATH)/bin"; \
+	$(RM) -f "$$BIN_PATH/$(FMT)"
+
+# Testing
+
 test: # Run tests, showing output only if they fail
 	@echo -e "$(GREEN)Running tests...$(RESET)"
 	@$(GO) test ./... > test.log 2>&1 || cat test.log
@@ -92,9 +112,3 @@ test-verbose: # Run tests in verbose mode
 test-with-coverage: # Run tests with coverage
 	@echo -e "$(GREEN)Running tests with coverage...$(RESET)"
 	@$(GO) test -v -cover ./...
-
-cleanup: # Remove dev dependencies
-	@echo -e "$(GREEN)Removing dev dependencies...$(RESET)"
-	@BIN_PATH="$(shell $(GO) env GOBIN)"; \
-	[ -z "$$BIN_PATH" ] && BIN_PATH="$(shell $(GO) env GOPATH)/bin"; \
-	$(RM) -f "$$BIN_PATH/$(FMT)"
