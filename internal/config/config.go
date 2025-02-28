@@ -144,7 +144,7 @@ func ShowConfig() {
 // in the following order of precedence:
 // 1. If a configuration file is specified using the --config or -c flag, use that.
 // 2. If a configuration file exists next to the binary, use that.
-// 3. If a configuration file exists in the project directory, use that.
+// 3. If a configuration file exists in the current working directory, use that.
 // 4. If a configuration file exists in the home directory, use that.
 // If no configuration file is found, load the default configuration.
 //
@@ -196,7 +196,7 @@ func findConfigFile(configName, configDir string) (string, error) {
 		return exeConfigFile, nil
 	}
 
-	// Check if the config file exists in the current directory.
+	// Check if the config file exists in the current working directory.
 	currDir, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("could not get current directory: %v", err)
