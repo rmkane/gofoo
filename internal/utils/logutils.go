@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var (
+const (
 	LevelNameDebug = "DEBUG"
 	LevelNameInfo  = "INFO"
 	LevelNameWarn  = "WARN"
