@@ -1,0 +1,5 @@
+bin/
+*.log
+
+.vscode/
+.idea/
